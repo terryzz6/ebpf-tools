@@ -8,9 +8,7 @@ LLVM_STRIP ?= /home/zhou/android/android-ndk-r27b/toolchains/llvm/prebuilt/linux
 BPFTOOL ?= ./bin/bpftool
 LIBBPF_OBJ := ./${ARCH}/lib/libbpf.a
 
-# LIBBLAZESYM_SRC := $(abspath blazesym/)
-# LIBBLAZESYM_INC := $(abspath $(LIBBLAZESYM_SRC)/capi/include)
-# LIBBLAZESYM_OBJ := $(abspath $(OUTPUT)/libblazesym_c.a)
+
 
 INCLUDES := -I$(OUTPUT) -I${ARCH}/include
 
@@ -21,11 +19,7 @@ BPFCFLAGS := -g -O2 -Wall -Werror=undef
 USE_BLAZESYM ?= 1
 $(shell [ -d $(OUTPUT) ] || mkdir -p $(OUTPUT))
 
-# BPF_INCLUDES = -I/usr/include/$(shell $(CC) -dumpmachine)
-# BPFCFLAGS_softirqs := $(BPFCFLAGS) -mcpu=v3
-# INSTALL ?= install
-# prefix ?= /usr/local
-# bindir := $(prefix)/bin
+
 
 
 
