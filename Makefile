@@ -7,16 +7,15 @@ CLANG ?= /home/zhou/android/android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_
 LLVM_STRIP ?= /home/zhou/android/android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip
 BPFTOOL ?= ./bin/bpftool
 LIBBPF_OBJ := ./${ARCH}/lib/libbpf.a
+BLAZESYM_LIB := ./${ARCH}/lib/libblazesym.a
 
 
 
-INCLUDES := -I$(OUTPUT) -I${ARCH}/include
-
-CFLAGS := -g -O2 -Wall -Wmissing-field-initializers -Werror -Werror=undef
+INCLUDES := -I$(OUTPUT) -I${ARCH}/include -I${ARCH}
+CFLAGS := -g -O2 -Wall -Wno-undef -Wno-unused-but-set-variable
 BPFCFLAGS := -g -O2 -Wall -Werror=undef
 
 
-USE_BLAZESYM ?= 1
 $(shell [ -d $(OUTPUT) ] || mkdir -p $(OUTPUT))
 
 
@@ -41,16 +40,7 @@ export OUTPUT BPFTOOL ARCH BTFHUB_ARCHIVE APPS
 
 APP_ALIASES = $(FSDIST_ALIASES) $(FSSLOWER_ALIASES) ${SIGSNOOP_ALIAS}
 
-COMMON_OBJ = \
-	$(OUTPUT)/trace_helpers.o \
-	$(OUTPUT)/syscall_helpers.o \
-	$(OUTPUT)/errno_helpers.o \
-	$(OUTPUT)/map_helpers.o \
-	$(OUTPUT)/uprobe_helpers.o \
-	$(OUTPUT)/btf_helpers.o \
-	$(OUTPUT)/compat.o \
-	$(OUTPUT)/path_helpers.o \
-	#
+COMMON_OBJ = $(OUTPUT)/compat.o
 
 
 
@@ -79,14 +69,6 @@ endif
 ifneq ($(EXTRA_LDFLAGS),)
 LDFLAGS += $(EXTRA_LDFLAGS)
 endif
-ifeq ($(USE_BLAZESYM),1)
-CFLAGS += -DUSE_BLAZESYM=1
-endif
-
-ifeq ($(USE_BLAZESYM),1)
-LDFLAGS += ${ARCH}/lib/libblazesym.a -lrt -lpthread -ldl
-endif
-
 .PHONY: clean
 clean:
 	$(call msg,CLEAN)
@@ -95,7 +77,13 @@ clean:
 
 $(APPS): %: $(OUTPUT)/%.o $(COMMON_OBJ) $(LIBBPF_OBJ) | $(OUTPUT)
 	$(call msg,BINARY,$@)
-	$(Q)$(CLANG) $(CFLAGS) $^ -L./$(ARCH)/lib -static -lblazesym -lbcc_bpf -lelf -lz -largp -o $@
+	$(Q)$(CLANG) $(CFLAGS) $^ -L./$(ARCH)/lib -static -lelf -lz $(LDFLAGS) $(LDLIBS) -o $@
+
+estrace: LDLIBS = -ldl -lm
+estrace: $(OUTPUT)/syscall_helpers.o $(BLAZESYM_LIB)
+
+$(BLAZESYM_LIB): $(BLAZESYM_LIB).gz
+	$(Q)gzip -dc $< > $@
 
 
 
