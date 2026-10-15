@@ -56,19 +56,23 @@ int tracepoint_raw_syscalls__sys_enter(struct trace_event_raw_sys_enter *ctx)
 {
 	__u64 id = bpf_get_current_pid_tgid();
 	__u32 tid = id;
-	struct args_t args = {};
+	struct args_t args = {}; ;// 进入函数和退出函数之间数据传递的结构
 
 	if (!trace_allowed(id >> 32, tid) ||
 	    (targ_sys_id >= 0 && targ_sys_id != ctx->id))
 		return 0;
 
-	args.sys_id = ctx->id;
-	args.args[0] = ctx->args[0];
-	args.args[1] = ctx->args[1];
-	args.args[2] = ctx->args[2];
-	args.args[3] = ctx->args[3];
-	args.args[4] = ctx->args[4];
-	args.args[5] = ctx->args[5];
+	args.sys_id = ctx->id;//系统调用号
+	args.args[0] = ctx->args[0]; //参数 1
+	args.args[1] = ctx->args[1]; //参数 2
+	args.args[2] = ctx->args[2]; //参数 3
+	args.args[3] = ctx->args[3]; //参数 4
+	args.args[4] = ctx->args[4]; //参数 5
+	args.args[5] = ctx->args[5]; //参数 6
+	if (ctx->id == ESTRACE_NR_OPENAT)
+    // bpf_probe_read_user_str 从用户态读取syscall的参数
+		args.path_len = bpf_probe_read_user_str(args.path, sizeof(args.path),
+						 (const void *)ctx->args[1]);
 	bpf_map_update_elem(&start, &tid, &args, BPF_ANY);
 	return 0;
 }
@@ -78,7 +82,7 @@ int tracepoint_raw_syscalls__sys_exit(struct trace_event_raw_sys_exit *ctx)
 {
 	__u64 id = bpf_get_current_pid_tgid();
 	__u32 tid = id;
-	struct args_t *args;
+	struct args_t *args;// 进入函数和退出函数之间数据传递的结构
 	struct event event = {};
 
 	args = bpf_map_lookup_elem(&start, &tid);
@@ -93,12 +97,25 @@ int tracepoint_raw_syscalls__sys_exit(struct trace_event_raw_sys_exit *ctx)
 	event.sys_id = args->sys_id;
 	event.ret = ctx->ret;
 	bpf_get_current_comm(event.comm, sizeof(event.comm));
+    //系统调用参数
 	event.args[0] = args->args[0];
 	event.args[1] = args->args[1];
 	event.args[2] = args->args[2];
 	event.args[3] = args->args[3];
 	event.args[4] = args->args[4];
 	event.args[5] = args->args[5];
+    // event  内核发动通过  perf buffer 发送到用户态的数据 
+	if (event.sys_id == ESTRACE_NR_OPENAT) {
+        // 针对 openat 
+        // event.path openat 打开的路径
+		event.path_len = args->path_len;
+		if (args->path_len > 0)
+			__builtin_memcpy(event.path, args->path, sizeof(event.path));
+	}
+
+
+
+    // 堆栈信息
 	if (targ_callers)
 		event.stack_size = bpf_get_stack(ctx, event.callers,
 					      sizeof(event.callers), BPF_F_USER_STACK);

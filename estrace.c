@@ -44,9 +44,10 @@ static struct {
 
 static void usage(const char *program)
 {
-	printf("Usage: %s [-T U e x c v] [-p PID] [-t TID] [-u UID] [-s ID] [-d SECONDS] [-n NAME]\n"
+	printf("Usage: %s [-T U e x c v] [-p PID] [-t TID] [-u UID] [-s SysID] [-d SECONDS] [-n NAME]\n"
 	       "  -T  print time of receipt    -U  print UID\n"
 	       "  -e  print six raw syscall arguments (hex)\n"
+	       "      openat also prints its pathname by default (up to 191 bytes)\n"
 	       "  -x  only failed syscalls    -c  symbolize user stack on exit\n"
 	       "  -p  process PID             -t  thread TID\n"
 	       "  -u  UID                     -s  syscall number (0 is valid)\n"
@@ -155,6 +156,30 @@ static void print_user_stack(const struct event *event)
 		blaze_syms_free(syms);
 }
 
+static void print_openat_path(const struct event *event)
+{
+	size_t index;
+
+	if (event->path_len <= 0) {
+		printf(" path=<unavailable: %d>", event->path_len);
+		return;
+	}
+	printf(" path=\"");
+	for (index = 0; index < OPENAT_PATH_LEN - 1 && event->path[index]; index++) {
+		unsigned char character = event->path[index];
+
+		if (character == '\\' || character == '"')
+			putchar('\\');
+		if (character >= 32 && character != 127)
+			putchar(character);
+		else
+			printf("\\x%02x", character);
+	}
+	printf("\"");
+	if (event->path_len == OPENAT_PATH_LEN)
+		printf(" (possibly truncated)");
+}
+
 static void handle_event(void *ctx, int cpu, void *data, __u32 size)
 {
 	struct event event;
@@ -196,6 +221,8 @@ static void handle_event(void *ctx, int cpu, void *data, __u32 size)
 			       (unsigned long long)event.args[index]);
 		printf("]");
 	}
+	if (event.sys_id == ESTRACE_NR_OPENAT)
+		print_openat_path(&event);
 	putchar('\n');
 	if (env.callers)
 		print_user_stack(&event);

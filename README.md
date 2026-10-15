@@ -39,6 +39,9 @@ su -c 'chmod 755 /data/local/tmp/estrace && /data/local/tmp/estrace'
 例如 `estrace -p 1234 -s 56 -e -c -d 10` 只追踪进程 1234 的调用号 56，
 显示原始参数和用户栈，10 秒后退出。`estrace -h` 查看完整选项。
 参数中的用户态指针只显示地址，不解引用；`-c` 的栈从系统调用**出口**采集。
+例外：`openat`（ARM64 调用号 56）的第二个参数是路径指针，程序在调用入口
+读取最多 191 字节的路径，并在出口事件打印 `path="..."`。相对路径不会被
+自动解析成绝对路径；读取失败会显示 `<unavailable>`，长路径可能截断。
 
 `failed to read kernel BTF ...: -13` 表示读取被拒绝，不能据此认定
 内核没有 BTF。移除 BTF 依赖也不会赋予加载 BPF、访问 tracepoint 和
