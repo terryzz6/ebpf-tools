@@ -40,10 +40,6 @@ export OUTPUT BPFTOOL ARCH BTFHUB_ARCHIVE APPS
 
 APP_ALIASES = $(FSDIST_ALIASES) $(FSSLOWER_ALIASES) ${SIGSNOOP_ALIAS}
 
-COMMON_OBJ = $(OUTPUT)/compat.o
-
-
-
 define allow-override
   $(if $(or $(findstring environment,$(origin $(1))),\
             $(findstring command line,$(origin $(1)))),,\
@@ -75,7 +71,7 @@ clean:
 	$(Q)rm -rf $(OUTPUT) $(APPS) $(APP_ALIASES)
 
 
-$(APPS): %: $(OUTPUT)/%.o $(COMMON_OBJ) $(LIBBPF_OBJ) | $(OUTPUT)
+$(APPS): %: $(OUTPUT)/%.o $(LIBBPF_OBJ) | $(OUTPUT)
 	$(call msg,BINARY,$@)
 	$(Q)$(CLANG) $(CFLAGS) $^ -L./$(ARCH)/lib -static -lelf -lz $(LDFLAGS) $(LDLIBS) -o $@
 

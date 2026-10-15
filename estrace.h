@@ -1,27 +1,25 @@
-/* SPDX-License-Identifier: (LGPL-2.1 OR BSD-2-Clause) */
-
 #ifndef __ESTRACE_H
 #define __ESTRACE_H
 
 #define TASK_COMM_LEN 16
 #define STACK_DEPTH 16
+#define INVALID_UID ((__u32)-1)
 
-/* 标记事件来自系统调用入口还是出口。 */
-enum event_type {
-	EVENT_ENTER,
-	EVENT_EXIT,
+struct args_t {
+	__s64 sys_id;
+	__u64 args[6];
 };
 
-/* BPF 程序发送给用户态的事件结构；入口事件不使用 ret。 */
 struct event {
 	__u32 pid;
+	__u32 tid;
 	__u32 uid;
-	__u32 type;
 	__s32 stack_size;
-	__s64 syscall_nr;
+	__s64 sys_id;
 	__s64 ret;
+	__u64 args[6];
+	__u64 callers[STACK_DEPTH];
 	char comm[TASK_COMM_LEN];
-	__u64 user_stack[STACK_DEPTH];
 };
 
 #endif /* __ESTRACE_H */
