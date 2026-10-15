@@ -14,7 +14,7 @@ static void sig_handler(int signal_number)
 }
 
 static int handle_event(void *ctx, struct event *data,size_t data_sz){
-    printf("pid:%d\n", data->pid);
+    printf("pid:%d\n sysid:%d path:%s", data->pid, data->sys_id,data->data);
     return 0;
 }
 

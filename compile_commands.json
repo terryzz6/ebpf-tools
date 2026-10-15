@@ -1,1 +1,45 @@
-[]
+[
+  {
+    "arguments": [
+      "/home/zhou/android/android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang",
+      "-g",
+      "-O2",
+      "-Wall",
+      "-Werror=undef",
+      "-target",
+      "bpf",
+      "-D__TARGET_ARCH_arm64",
+      "-Iarm64/",
+      "-I/home/zhou/ebpf/bcc-zg/.output",
+      "-Iarm64/include",
+      "-Iarm64",
+      "-c",
+      "-o",
+      "/home/zhou/ebpf/bcc-zg/.output/uprobe_hook.bpf.o",
+      "uprobe_hook.bpf.c"
+    ],
+    "directory": "/home/zhou/ebpf/bcc-zg",
+    "file": "/home/zhou/ebpf/bcc-zg/uprobe_hook.bpf.c",
+    "output": "/home/zhou/ebpf/bcc-zg/.output/uprobe_hook.bpf.o"
+  },
+  {
+    "arguments": [
+      "/home/zhou/android/android-ndk-r27b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang",
+      "-g",
+      "-O2",
+      "-Wall",
+      "-Wno-undef",
+      "-Wno-unused-but-set-variable",
+      "-I/home/zhou/ebpf/bcc-zg/.output",
+      "-Iarm64/include",
+      "-Iarm64",
+      "-c",
+      "-o",
+      "/home/zhou/ebpf/bcc-zg/.output/uprobe_hook.o",
+      "uprobe_hook.c"
+    ],
+    "directory": "/home/zhou/ebpf/bcc-zg",
+    "file": "/home/zhou/ebpf/bcc-zg/uprobe_hook.c",
+    "output": "/home/zhou/ebpf/bcc-zg/.output/uprobe_hook.o"
+  }
+]
